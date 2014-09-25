@@ -1,0 +1,17 @@
+-- Notes on strategy for forest_cover task --
+
+My plan is to implement most of the model code from scratch in order
+to better learn the algorithms as opposed to just using a ML library
+
+
+Data pre-processing:
+    - partition training data into training/validation sets
+    - normalize all features prior to variance analysis
+    - Determine most variant features across samples
+    - Remove invariants
+
+
+Possible models:
+    - multi-class logistic regression
+    - clustering...we know how many clusters there should be
+    - perhaps decision tree / random forest approach
