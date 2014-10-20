@@ -1,4 +1,7 @@
 '''
+    Author: Clinton Olson
+    Email: clint.olson2@gmail.com
+
     The DataScaler class provides a number of data scaling techniques
     for array-like objects where rows are samples and columns are 
     variables
