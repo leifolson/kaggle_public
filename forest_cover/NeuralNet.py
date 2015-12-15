@@ -68,7 +68,9 @@ class NeuralNet:
 
         Weights are initialized to small random pos/neg numbers.
         The weights for each layer are stored in a list where 
-        list element corresponds to the layer of the same index       
+        list element corresponds to the layer of the same index
+
+        Weights are stored as column vectors for each hidden node       
     '''
     def initWeights(self,layers):
 
