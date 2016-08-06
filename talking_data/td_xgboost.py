@@ -12,8 +12,8 @@ from sklearn.metrics import log_loss
 random.seed(2016)
 
 def run_xgb(train, test, features, target, random_state=0):
-    eta = 0.1
-    max_depth = 3
+    eta = 0.05
+    max_depth = 4
     subsample = 0.7
     colsample_bytree = 0.7
     start_time = time.time()
@@ -31,10 +31,11 @@ def run_xgb(train, test, features, target, random_state=0):
         "silent": 1,
         "seed": random_state,
     }
-    num_boost_round = 500
+    num_boost_round = 1000
     early_stopping_rounds = 50
     test_size = 0.3
 
+    # split up the training data into a training and validation set
     X_train, X_valid = train_test_split(train, test_size=test_size, random_state=random_state)
     print('Length train:', len(X_train.index))
     print('Length valid:', len(X_valid.index))
@@ -58,6 +59,10 @@ def run_xgb(train, test, features, target, random_state=0):
 
 
 def create_submission(score, test, prediction):
+    """
+    Creates kaggle submission file
+    """
+
     # Make Submission
     now = datetime.datetime.now()
     sub_file = '/Users/clint/Development/data/talking_data/submission_' + str(score) + '_' + str(now.strftime("%Y-%m-%d-%H-%M")) + '.csv'
@@ -77,6 +82,9 @@ def create_submission(score, test, prediction):
 
 
 def map_column(table, f):
+    """
+    Maps column labels to values
+    """
     labels = sorted(table[f].unique())
     mappings = dict()
     for i in range(len(labels)):
@@ -88,6 +96,9 @@ def map_column(table, f):
 def read_train_test():
     """
     Reads in the relevant training and test data
+
+    Returns:
+        train, test, features as lists
     """
 
     # Events
@@ -127,10 +138,11 @@ def read_train_test():
     return train, test, features
 
 
-train, test, features = read_train_test()
-print('Length of train: ', len(train))
-print('Length of test: ', len(test))
-print('Features [{}]: {}'.format(len(features), sorted(features)))
-test_prediction, score = run_xgb(train, test, features, 'group')
-print("LS: {}".format(round(score, 5)))
-create_submission(score, test, test_prediction)
+if __name__ == "__main__":
+    train, test, features = read_train_test()
+    print('Length of train: ', len(train))
+    print('Length of test: ', len(test))
+    print('Features [{}]: {}'.format(len(features), sorted(features)))
+    test_prediction, score = run_xgb(train, test, features, 'group')
+    print("LS: {}".format(round(score, 5)))
+    create_submission(score, test, test_prediction)
