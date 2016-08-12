@@ -116,13 +116,16 @@ def read_train_test():
 
     # Train
     print('Read train...')
-    train = pd.read_csv("/Users/clint/Development/data/talking_data/gender_age_train.csv", dtype={'device_id': np.str})
-    train = map_column(train, 'group')
-    train = train.drop(['age'], axis=1)
-    train = train.drop(['gender'], axis=1)
-    train = pd.merge(train, pbd, how='left', on='device_id', left_index=True)
-    train = pd.merge(train, events_small, how='left', on='device_id', left_index=True)
-    train.fillna(-1, inplace=True)
+    train = pd.read_csv('/Users/clint/Development/data/talking_data/train_data_imputed_means.csv')
+    # Need to figure out all the transformations in python probably...    
+
+    #train = pd.read_csv("/Users/clint/Development/data/talking_data/gender_age_train.csv", dtype={'device_id': np.str})
+    #train = map_column(train, 'group')
+    #train = train.drop(['age'], axis=1)
+    #train = train.drop(['gender'], axis=1)
+    #train = pd.merge(train, pbd, how='left', on='device_id', left_index=True)
+    #train = pd.merge(train, events_small, how='left', on='device_id', left_index=True)
+    #train.fillna(-1, inplace=True)
 
     # Test
     print('Read test...')
