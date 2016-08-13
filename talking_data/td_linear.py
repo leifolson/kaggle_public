@@ -9,9 +9,12 @@ from scipy.sparse import csr_matrix, hstack
 from sklearn.linear_model import LogisticRegression
 from sklearn.cross_validation import StratifiedKFold
 from sklearn.metrics import log_loss
+from sklearn import svm
 
 print('loading data...')
 datadir = '/Users/clint/Development/data/talking_data'
+
+# Note: the index column is specified for later use in assignment based on index
 gatrain = pd.read_csv(os.path.join(datadir,'gender_age_train.csv'),
                       index_col='device_id')
 gatest = pd.read_csv(os.path.join(datadir,'gender_age_test.csv'),
@@ -27,6 +30,7 @@ appevents = pd.read_csv(os.path.join(datadir,'app_events.csv'),
                         dtype={'is_active':bool})
 applabels = pd.read_csv(os.path.join(datadir,'app_labels.csv'))
 
+# numbers the rows
 gatrain['trainrow'] = np.arange(gatrain.shape[0])
 gatest['testrow'] = np.arange(gatest.shape[0])
 
@@ -39,18 +43,34 @@ gatrain['brand'] = phone['brand']
 gatest['brand'] = phone['brand']
 
 # looks like this is creating the sparse matrices where brand is one-hot encoded
+'''
+This little bit of code is using a matrix of ones along with training data rows and 
+brand identifiers to construct a one-hot encoded matrix for each row of the training set.
+
+e.g., 
+
+csr_matrix((np.ones(3), ([0,1,2],[0,1,2]))).toarray() yields
+array([[ 1.,  0.,  0.],
+       [ 0.,  1.,  0.],
+       [ 0.,  0.,  1.]])
+
+'''
 print('creating sparse matrices...')
-Xtr_brand = csr_matrix((np.ones(gatrain.shape[0]), 
-                       (gatrain.trainrow, gatrain.brand)))
+Xtr_brand = csr_matrix((np.ones(gatrain.shape[0]),              # data 
+                       (gatrain.trainrow, gatrain.brand)))      # row/col index
+
 Xte_brand = csr_matrix((np.ones(gatest.shape[0]), 
                        (gatest.testrow, gatest.brand)))
 print('Brand features: train shape {}, test shape {}'.format(Xtr_brand.shape, Xte_brand.shape))
 
+# label encoding, check out sklearn's LabelEncoder for doing easy encoding
 m = phone.phone_brand.str.cat(phone.device_model)
 modelencoder = LabelEncoder().fit(m)
 phone['model'] = modelencoder.transform(m)
 gatrain['model'] = phone['model']
 gatest['model'] = phone['model']
+
+# again, one-hot encoding the phone model
 Xtr_model = csr_matrix((np.ones(gatrain.shape[0]), 
                        (gatrain.trainrow, gatrain.model)))
 Xte_model = csr_matrix((np.ones(gatest.shape[0]), 
@@ -61,6 +81,8 @@ print('Model features: train shape {}, test shape {}'.format(Xtr_model.shape, Xt
 appencoder = LabelEncoder().fit(appevents.app_id)
 appevents['app'] = appencoder.transform(appevents.app_id)
 napps = len(appencoder.classes_)
+
+# Note: the double brackets [[]] return a DataFrame rather than a Series
 deviceapps = (appevents.merge(events[['device_id']], how='left',left_on='event_id',right_index=True)
                        .groupby(['device_id','app'])['app'].agg(['size'])
                        .merge(gatrain[['trainrow']], how='left', left_index=True, right_index=True)
@@ -99,10 +121,13 @@ Xte_label = csr_matrix((np.ones(d.shape[0]), (d.testrow, d.label)),
                       shape=(gatest.shape[0],nlabels))
 print('Labels data: train shape {}, test shape {}'.format(Xtr_label.shape, Xte_label.shape))
 
+# stack up all the features
 Xtrain = hstack((Xtr_brand, Xtr_model, Xtr_app, Xtr_label), format='csr')
 Xtest =  hstack((Xte_brand, Xte_model, Xte_app, Xte_label), format='csr')
 print('All features: train shape {}, test shape {}'.format(Xtrain.shape, Xtest.shape))
 
+
+# encoding for the target values
 targetencoder = LabelEncoder().fit(gatrain.group)
 y = targetencoder.transform(gatrain.group)
 nclasses = len(targetencoder.classes_)
@@ -133,7 +158,11 @@ for C in Cs:
 plt.semilogx(Cs, res,'-o');
 plt.show()
 
+print('log reg')
 print(score(LogisticRegression(C=0.02)))
+
+print('svm')
+print(score(svm.SVC(decision_function_shape='ovo')))
 
 print(score(LogisticRegression(C=0.02, multi_class='multinomial',solver='lbfgs')))
 
