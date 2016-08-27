@@ -140,6 +140,8 @@ def score(clf, random_state = 0):
     for itrain, itest in kf:
         Xtr, Xte = Xtrain[itrain, :], Xtrain[itest, :]
         ytr, yte = y[itrain], y[itest]
+
+        print('model fitting...')
         clf.fit(Xtr, ytr)
         pred[itest,:] = clf.predict_proba(Xte)
         # Downsize to one fold only for kernels
@@ -158,12 +160,7 @@ for C in Cs:
 plt.semilogx(Cs, res,'-o');
 plt.show()
 
-print('log reg')
 print(score(LogisticRegression(C=0.02)))
-
-print('svm')
-print(score(svm.SVC(decision_function_shape='ovo')))
-
 print(score(LogisticRegression(C=0.02, multi_class='multinomial',solver='lbfgs')))
 
 clf = LogisticRegression(C=0.02, multi_class='multinomial',solver='lbfgs')
