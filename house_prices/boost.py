@@ -4,8 +4,8 @@ Main driver program for processing data and running models
 
 import pandas as pd
 import numpy as np
+import xgboost as xgb
 from sklearn import preprocessing
-from sklearn import linear_model
 from sklearn import cross_validation
 
 def map_cat_vars(df, encoder_map):
@@ -48,14 +48,28 @@ for c in joined.columns:
 map_cat_vars(train_data, encoder_map)
 map_cat_vars(test_data, encoder_map)
  
-# try out a linear model
-lm = linear_model.LinearRegression(normalize=True)
-lm.fit(train_data, targets)
+# create cv datasets
+print 'create cv datasets...'
+X_train, X_cv, y_train, y_cv = cross_validation.train_test_split(train_data, targets, 
+                                                                 test_size=0.3, random_state = 0)
 
+# trying out a boosted tree
+dtrain = xgb.DMatrix(X_train, label=y_train)
+dcv = xgb.DMatrix(X_cv, y_cv)
+dtest = xgb.DMatrix(test_data)
+
+# set up params
+param = {'bst:max_depth':2, 'bst:eta':1, 'silent':1, 'objective':'reg:linear', 'eval_metric':'rmse' }
+evallist  = [(dcv,'eval'), (dtrain,'train')]
+
+num_rounds = 1000
+bst = xgb.train(param, dtrain, num_rounds, evallist, early_stopping_rounds = 10)
+
+preds = bst.predict(dtest)
 
 # create result set
-test_data['SalePrice'] = lm.predict(test_data)
-test_data.to_csv('~/Development/data/house_prices/sub_1.csv', columns=['SalePrice'])
+test_data['SalePrice'] = preds
+test_data.to_csv('~/Development/data/house_prices/boost_sub_1.csv', columns=['SalePrice'])
 
 
 
