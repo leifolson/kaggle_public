@@ -27,9 +27,9 @@ for var in cat_vars:
     train_data[var] = lab_enc.transform(train_data[var])
     test_data[var] = lab_enc.transform(test_data[var])
 
-eta = 0.05
-max_depth = 5
-subsample = 0.7
+eta = 0.1
+max_depth = 6
+subsample = 0.5
 colsample_bytree = 0.7
 start_time = time.time()
 
